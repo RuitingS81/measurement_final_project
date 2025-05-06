@@ -39,6 +39,13 @@ d_demo <- d |>
   arrange(desc(-id))
 ###############################################################
 ```
+#PART 1: Introduction
+
+Here we can do some basic descriptions of the dataset, like how many respondents, their demographics distributions.. make some histograms
+```{r}
+
+```
+
 
 # PART 2: Working with “item responses”
 
