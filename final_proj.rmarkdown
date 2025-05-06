@@ -12,19 +12,16 @@ editor_options:
 setwd("~/Desktop/Measurement/measurement_final_project/")
 library(tidyverse)
 library(mirt)
-library(FactoMineR)
-library(factoextra)
-library(psych)
 ```
 
 
+
+
 # Initial data processing 
+
+
 ```{r}
 d <- read_csv("data/genpsych_russell_2024_gemma.csv")
-codebook <- read_csv("data/codebook_gemma-2_big-five.csv")
-codebook <- codebook |> 
-  mutate(item = 1:nrow(codebook)) |> 
-  select(item,item_content)
 
 d_resp <- d |>
   select(id, item, resp) |>
@@ -49,9 +46,13 @@ write_csv(d_demo,"data/d_demo.csv")
 
 
 ```
+
+
 #PART 1: Introduction
 
 Here we can do some basic descriptions of the dataset, like how many respondents, their demographics distributions.. make some histograms
+
+
 ```{r}
 # d_demo |> map(unique)
 
@@ -98,84 +99,30 @@ d_demo |>
 ```
 
 
+
+
 # PART 2: Working with “item responses”
 
 Here we will don a FA and fit an IRT (use GPCM) to those response data (d_resp)
 
+
+
 ```{r}
-d_resp_fa <- d_resp |> 
-  select(-id) |>
-  mutate(across(everything(), as.numeric)) |>
-  na.omit()
-
-fa_large <- fa(d_resp_fa, rotate='promax', nfactors=25)
-
-fa_eigenvalues <- data.frame(
-  Factor = seq_along(fa_large$e.values),
-  Eigenvalue = fa_large$e.values
-) |>
-  mutate(Cumulative_Variance = cumsum(Eigenvalue) / sum(Eigenvalue) * 100)
-
-ggplot(fa_eigenvalues, aes(x = Factor, y = Eigenvalue)) +
-  geom_point() +
-  geom_line(color="salmon2") +
-  geom_hline(yintercept = 1, linetype = "dashed", color = "firebrick") +
-  theme_minimal() +
-  labs(title = "Elbow Plot EFA", x = "Factor Number", y = "Eigenvalue")
-
-######## From the plot we picked a factor number =6 #########
-fa_final <- fa(d_resp_fa, rotate='promax', nfactors=6)
- ############################################################
-
-fa_loadings <- as.data.frame(unclass(fa_final$loadings)) |>
-  tibble::rownames_to_column(var="item") |>
-  select(-item)
-
-fa_loadings_long <- fa_loadings |>
-  rownames_to_column("item") |>
-  pivot_longer(cols=-item ,names_to = "Factor", values_to = "Loading") |>
-  mutate(item=as.numeric(item)) |>
-  left_join(codebook,by="item")
 
 
-fa_long_plot_fun <- function(factor_number, threshold, color) { 
-  factor_name <- paste0("MR", factor_number)
-  
-  tmp <- fa_loadings_long |>
-    filter(Factor == factor_name, abs(Loading) >= threshold) |>
-    #####WRAP TEXT SO IT WILL LOOK NICER####
-    mutate(item_content = str_wrap(item_content, width = 40))
-  
-  ggplot(tmp, aes(x = Loading, y = fct_reorder(item_content, Loading))) +
-    geom_point(color = color, alpha = 0.7) +
-    labs(
-      title = paste0("Item Loadings on Factor ", factor_number),
-      x = NULL,
-      y = NULL
-    ) +
-    theme(
-      axis.text.y = element_text(size = 3)  
-    )+
-    theme_minimal()
-}
 
-fa_long_plot_fun (1, threshold = 0.13, color = "#7765E3")
-fa_long_plot_fun (2, threshold = 0.12, color = "#7765E3")
-fa_long_plot_fun (3, threshold = 0.15, color = "#7765E3")
-fa_long_plot_fun (4, threshold = 0.07, color = "#7765E3")
-fa_long_plot_fun (5, threshold = 0.08, color = "#7765E3")
-fa_long_plot_fun (6, threshold = 0.09, color = "#7765E3")
 ```
+
+
 
 
 
 
 # PART 3: Clustering
 Here let's use those demographics data and turn everything into categorical and then fit a LCA 
+
+
 ```{r}
 
 ```
-
-
-
 
