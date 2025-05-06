@@ -1,0 +1,32 @@
+---
+title: "Measurement_Final_Project"
+author: "Ruiting Shen, Ivy Qiu"
+format: pdf
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| output: false
+#| warning: false
+setwd("~/Desktop/Measurement/measurement_final_project/")
+library(tidyverse)
+library(mirt)
+```
+
+
+```{r}
+d <- read_csv("mhscdc_fried_2020_smartphone.csv")
+
+d |> map(unique)
+
+
+```
+
+
+
+
+
+
+
+
