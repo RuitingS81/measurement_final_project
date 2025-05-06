@@ -55,46 +55,49 @@ Here we can do some basic descriptions of the dataset, like how many respondents
 ```{r}
 # d_demo |> map(unique)
 
-d_demo |> 
+age_hist <- d_demo |> 
   ggplot(aes(x = cov_age))+
-  geom_histogram(binwidth = 2, fill = "lightpink2", color = "white") +
+  geom_histogram(binwidth = 2, fill = "#7765E3", color = "white") +
   theme_minimal() +
-  labs(title = "Age Distribution", x = "Age", y = "Count")
+  labs(x = "Age", y = "Count")
 
 
-d_demo |>
+english_dist <- d_demo |>
     ggplot(aes(x = .data[["cov_english"]])) +
-    geom_bar(fill = "#CCA7A2") +
+    geom_bar(fill = "#7765E3") +
     theme_minimal() +
     labs(
-      title = paste("Distribution of English Speaker"),
-      x = "English Speaker",
-      y = "Count"
+      x = NULL,
+      y = NULL
     )
 
 
-d_demo |>
+race_dist <- d_demo |>
     ggplot(aes(x = .data[["cov_race"]])) +
-    geom_bar(fill = "#CCA7A2") +
+    geom_bar(fill = "#7765E3") +
     theme_minimal() +
     labs(
-      title = paste("Distribution of Race"),
       x = NULL,
       y = NULL
     )+
   theme(axis.text.x = element_text(angle = 40, hjust = 1, size = 6))
 
 
-d_demo |>
+gender_dist <-d_demo |>
     ggplot(aes(x = .data[["cov_gender"]])) +
-    geom_bar(fill = "#CCA7A2") +
+    geom_bar(fill = "#7765E3") +
     theme_minimal() +
     labs(
-      title = paste("Distribution of Gender"),
       x = NULL,
       y = NULL
     )+
   theme(axis.text.x = element_text(angle = 40, hjust = 1, size = 6))
+
+
+ggsave("plots/age_histogram.png", age_hist)
+ggsave("plots/englishspeaking_distribution.png", english_dist)
+ggsave("plots/race_distribution.png", race_dist)
+ggsave("plots/gender_distribution.png", gender_dist)
 ```
 
 
@@ -159,12 +162,15 @@ fa_long_plot_fun <- function(factor_number, threshold, color) {
     theme_minimal()
 }
 
-fa_long_plot_fun (1, threshold = 0.13, color = "#7765E3")
-fa_long_plot_fun (2, threshold = 0.12, color = "#7765E3")
-fa_long_plot_fun (3, threshold = 0.15, color = "#7765E3")
-fa_long_plot_fun (4, threshold = 0.07, color = "#7765E3")
-fa_long_plot_fun (5, threshold = 0.08, color = "#7765E3")
-fa_long_plot_fun (6, threshold = 0.09, color = "#7765E3")
+fa1 <- fa_long_plot_fun (1, threshold = 0.13, color = "#7765E3") 
+fa2 <-fa_long_plot_fun (2, threshold = 0.12, color = "#7765E3")
+fa3 <-fa_long_plot_fun (3, threshold = 0.15, color = "#7765E3")
+fa4 <-fa_long_plot_fun (4, threshold = 0.07, color = "#7765E3")
+fa5 <-fa_long_plot_fun (5, threshold = 0.08, color = "#7765E3")
+fa6 <-fa_long_plot_fun (6, threshold = 0.09, color = "#7765E3")
+
+
+
 ```
 
 
