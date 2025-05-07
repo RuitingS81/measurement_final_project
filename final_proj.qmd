@@ -15,6 +15,7 @@ library(mirt)
 library(FactoMineR)
 library(factoextra)
 library(psych)
+library(glca)
 ```
 
 
@@ -119,12 +120,12 @@ fa_eigenvalues <- data.frame(
 ) |>
   mutate(Cumulative_Variance = cumsum(Eigenvalue) / sum(Eigenvalue) * 100)
 
-ggplot(fa_eigenvalues, aes(x = Factor, y = Eigenvalue)) +
+efa_elbow_plot <- ggplot(fa_eigenvalues, aes(x = Factor, y = Eigenvalue)) +
   geom_point() +
   geom_line(color="salmon2") +
   geom_hline(yintercept = 1, linetype = "dashed", color = "firebrick") +
   theme_minimal() +
-  labs(title = "Elbow Plot EFA", x = "Factor Number", y = "Eigenvalue")
+  labs(x = "Factor Number", y = "Eigenvalue")
 
 ######## From the plot we picked a factor number =6 #########
 fa_final <- fa(d_resp_fa, rotate='promax', nfactors=6)
@@ -169,19 +170,101 @@ fa4 <-fa_long_plot_fun (4, threshold = 0.07, color = "#7765E3")
 fa5 <-fa_long_plot_fun (5, threshold = 0.08, color = "#7765E3")
 fa6 <-fa_long_plot_fun (6, threshold = 0.09, color = "#7765E3")
 
-
+ggsave("plots/efa_elbow_plot.png",efa_elbow_plot)
+ggsave("plots/factor1_loading_plot.png", fa1)
+ggsave("plots/factor2_loading_plot.png", fa2)
+ggsave("plots/factor3_loading_plot.png", fa3)
+ggsave("plots/factor4_loading_plot.png", fa4)
 
 ```
-
-
 
 
 # PART 3: Clustering
-Here let's use those demographics data and turn everything into categorical and then fit a LCA 
-```{r}
+Fit LCA to resp data 
 
+```{r}
+d_lca <- d_resp |> 
+  select(-id) |> 
+  mutate(across(everything(), ~as.factor(.)))
+
+f <- item(starts.with = "items") ~ 1
+set.seed(88)
+glc_m1 <- glca(f, data=d_lca, nclass=3, verbose=F)
+glc_m2 <- glca(f, data=d_lca, nclass=4, verbose=F)
+glc_m3 <- glca(f, data=d_lca, nclass=5, verbose=F)
+glc_m4 <- glca(f, data=d_lca, nclass=6, verbose=F)
+glc_m5 <- glca(f, data=d_lca, nclass=7, verbose=F)
+glc_m6 <- glca(f, data=d_lca, nclass=8, verbose=F)
+glc_m7 <- glca(f, data=d_lca, nclass=9, verbose=F)
+
+gofglca(glc_m1,glc_m2,glc_m3, glc_m4, glc_m5, glc_m6, glc_m7, test='boot')
+
+#######Based on the goodness of fit table, i would choose model 5 (nclass = 7)as our final mode########
+
+plot(glc_m5)
+summary(glc_m5)
 ```
 
+Descriptions of all seven classes
+Class1: Tends to select Y=4 across most items, especially those about helping others, kindness, and perspective-taking (e.g., Items 1, 3, 4, 5, 10). People in this class appears to genuinely endorse prosocial and empathetic values, but with moderation. They seem thoughtful and socially inclined without being extreme.
+
+Class2: High probability of Y=5 on many items,this group strongly identifies with prosocial ideals and expresses enthusiastic endorsement of kindness, empathy, and cooperation.
+
+Class3: High probabilities of Y=1/Y=2, especially on Items 11–17 (e.g., “I am empathetic…”, “I find it easy to compromise…”). This class expresses minimal alignment with prosocial/empathetic traits — potentially skeptical, disengaged, or less socially oriented.
+
+Class4: They often hover in the middle or slightly negative range, possibly due to uncertainty, ambivalence, or social detachment.
+
+Class5: Very high Y=1–2 on almost all items. This group appears actively disengaged or resistant to social-emotional values. They may not identify with the items or could be non-serious responders.
+
+Class6: Shows context-dependent endorsement. For example, empathetic items get more Y=4s, while abstract moral statements (e.g., fairness, Item 20+) get more mid-scale. This group considers each item carefully and gives nuanced responses — agreeing where it resonates, holding back where uncertain.
+
+Class7: Very high Y=5 on nearly every item (especially Items 1–10, 24, 27). Very high Y=5 on nearly every item (especially Items 1–10, 24, 27).
+
+```{r}
+# which(rowSums(is.na(d_lca)) == ncol(d_lca))
+posterior <- data.frame(glc_m5$posterior)
+class <- data.frame(class = max.col(posterior))
+d_demo_clean <- d_demo[!apply(d_lca, 1, function(x) all(is.na(x))), ]
+
+demo_by_class <- bind_cols(d_demo_clean,class) |> 
+  mutate(class = as.factor(class)) |> 
+  mutate(across(c(cov_english, cov_hispanic, cov_race, cov_gender), as.factor))
 
 
+##MAKE PLOTS NOW###
+class_colors <- c(
+  "1" = "#99DDC8",
+  "2" = "#6564DB",
+  "3" = "#FFA0FD",
+  "4" = "#F9DC5C",
+  "5" = "#67597A",
+  "6" = "#E29578",
+  "7" = "#F26430"
+)
+
+
+demo_by_class |> 
+  ggplot(aes(x = cov_age, fill = class)) +
+  geom_density(alpha = 0.8) +  
+  scale_fill_manual(values = class_colors) +
+  labs(title = "Age Density by Latent Class", x = "Age", y = "Density") +
+  theme_minimal()
+
+
+ggplot(demo_by_class, aes(x = cov_gender, fill = class)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = class_colors) +
+  labs(x = NULL, y = NULL)  +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=6) )
+
+
+ggplot(demo_by_class, aes(x = cov_race, fill = class)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = class_colors) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=5) )
+
+```
 
