@@ -1,6 +1,6 @@
 ---
 title: "Measurement_Final_Project"
-author: "Ruiting Shen, Ivy Qiu"
+author: "Ruiting Shen, Zhuoqing Qiu"
 format: pdf
 editor_options: 
   chunk_output_type: console
@@ -25,10 +25,10 @@ d <- read_csv("data/genpsych_russell_2024_gemma.csv")
 codebook <- read_csv("data/codebook_gemma-2_big-five.csv")
 codebook <- codebook |> 
   mutate(item = 1:nrow(codebook)) |> 
-  select(item,item_content)
+  dplyr::select(item,item_content)
 
 d_resp <- d |>
-  select(id, item, resp) |>
+  dplyr::select(id, item, resp) |>
   pivot_wider(names_from = item, values_from = resp) |> 
   arrange(desc(-id))
 
@@ -39,10 +39,10 @@ item_cols_sorted <- item_cols[item_order]
 
 ########Those are the two datasets we will use later###########
 d_resp <- d_resp |>
-  select(id, all_of(item_cols_sorted))
+  dplyr::select(id, all_of(item_cols_sorted))
 
 d_demo <- d |>
-  select(id, starts_with("cov_")) |>
+  dplyr::select(id, starts_with("cov_")) |>
   distinct() |> 
   arrange(desc(-id))
 ###############################################################
