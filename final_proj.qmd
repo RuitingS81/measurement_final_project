@@ -52,7 +52,7 @@ write_csv(d_demo,"data/d_demo.csv")
 ```
 #PART 1: Introduction
 
-Here we can do some basic descriptions of the dataset, like how many respondents, their demographics distributions.. make some histograms
+We begin with a descriptive overview of the dataset — reporting sample size and demographic breakdowns— and illustrate these patterns with histograms.
 ```{r}
 # d_demo |> map(unique)
 
@@ -104,7 +104,7 @@ ggsave("plots/gender_distribution.png", gender_dist)
 
 # PART 2: Working with “item responses”
 
-Here we will don a FA and fit an IRT (use GPCM) to those response data (d_resp)
+Next, we will perform an exploratory factor analysis and fit a generalized partial credit IRT model (GPCM) to the response data (d_resp).
 
 ```{r}
 length(unique(d_resp$id))
@@ -190,7 +190,7 @@ ggsave("plots/all_factor_loading_plots.png",
 
 
 # PART 3: Clustering
-Fit LCA to resp data 
+In addition, we fit a latent class analysis (LCA) model to the response data (d_resp) to uncover distinct subgroups of respondents.
 
 ```{r}
 d_lca <- d_resp |> 
@@ -209,7 +209,7 @@ glc_m7 <- glca(f, data=d_lca, nclass=9, verbose=F)
 
 gofglca(glc_m1,glc_m2,glc_m3, glc_m4, glc_m5, glc_m6, glc_m7, test='boot')
 
-#######Based on the goodness of fit table, i would choose model 5 (nclass = 7)as our final mode########
+#######Based on the goodness‐of‐fit statistics, we selected model5—which specifies seven latent classes—as our final solution########
 
 plot(glc_m5)
 fit <- summary(glc_m5)
@@ -260,19 +260,27 @@ walk2(plots, 1:7, ~ ggsave(paste0("plot_group_", .y, ".png"), .x, width = 10, he
 ```
 
 Descriptions of all seven classes
-Class1: Tends to select Y=4 across most items, especially those about helping others, kindness, and perspective-taking (e.g., Items 1, 3, 4, 5, 10). People in this class appears to genuinely endorse prosocial and empathetic values, but with moderation. They seem thoughtful and socially inclined without being extreme.
+Class 1. Moderate Prosocials
+Members of this class tend to choose “4” on most items—particularly those probing helping behaviors, kindness, and perspective‑taking (e.g., Items 1, 3, 4, 5, 10). They endorse prosocial and empathetic values consistently, suggesting thoughtful, socially engaged attitudes.
 
-Class2: High probability of Y=5 on many items,this group strongly identifies with prosocial ideals and expresses enthusiastic endorsement of kindness, empathy, and cooperation.
+Class 2. Strong Prosocials
+This group exhibits very high probabilities of selecting “5” on a broad range of items. They display enthusiastic endorsement with statements about kindness, empathy, and cooperation.
 
-Class3: High probabilities of Y=1/Y=2, especially on Items 11–17 (e.g., “I am empathetic…”, “I find it easy to compromise…”). This class expresses minimal alignment with prosocial/empathetic traits — potentially skeptical, disengaged, or less socially oriented.
+Class 3. Low Prosocials
+Respondents in this group are most likely to pick “1” or “2,” especially on empathy‑related items (e.g., “I am empathetic…,” “I find it easy to compromise…”). Their pattern reflects minimal alignment with prosocial and empathetic traits — potentially skeptical, disengaged, or less socially oriented.
 
-Class4: They often hover in the middle or slightly negative range, possibly due to uncertainty, ambivalence, or social detachment.
+Class 4. Ambivalent Responders
+Individuals in this class gravitate toward the middle of the scale or slightly below (“2–3”). Their responses suggest uncertainty or ambivalence about the statements, possibly due to uncertainty, ambivalence, or social detachment.
 
-Class5: Very high Y=1–2 on almost all items. This group appears actively disengaged or resistant to social-emotional values. They may not identify with the items or could be non-serious responders.
+Class 5. Active Non‑endorsers
+Members consistently choose “1–2” across nearly all items. This pattern indicates active disengagement or resistance to social‑emotional values; they may not identify with the content or could be responding non‑seriously.
 
-Class6: Shows context-dependent endorsement. For example, empathetic items get more Y=4s, while abstract moral statements (e.g., fairness, Item 20+) get more mid-scale. This group considers each item carefully and gives nuanced responses — agreeing where it resonates, holding back where uncertain.
+Class 6. Context‑Sensitive Responders
+This class provides item‑by‑item judgments — selecting higher ratings for clear, concrete empathy items, but defaulting to mid‑scale values for abstract moral statements (e.g., fairness items from 20 onward).
 
-Class7: Very high Y=5 on nearly every item (especially Items 1–10, 24, 27). Very high Y=5 on nearly every item (especially Items 1–10, 24, 27).
+Class 7. Extreme Prosocials
+Respondents in this class almost uniformly select “5,” especially on early items (1–10) and others like 24 and 27. 
+
 
 ```{r}
 # which(rowSums(is.na(d_lca)) == ncol(d_lca))
