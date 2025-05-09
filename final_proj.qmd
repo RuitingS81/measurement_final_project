@@ -107,6 +107,11 @@ ggsave("plots/gender_distribution.png", gender_dist)
 Here we will don a FA and fit an IRT (use GPCM) to those response data (d_resp)
 
 ```{r}
+length(unique(d_resp$id))
+nrow(d_resp)
+```
+
+```{r}
 d_resp_fa <- d_resp |> 
   select(-id) |>
   mutate(across(everything(), as.numeric)) |>
@@ -158,7 +163,7 @@ fa_long_plot_fun <- function(factor_number, threshold, color) {
       y = NULL
     ) +
     theme(
-      axis.text.y = element_text(size = 3)  
+      axis.text.y = element_text(size = 3, face = "bold", family = "Arial")  
     )+
     theme_minimal()
 }
@@ -175,7 +180,12 @@ ggsave("plots/factor1_loading_plot.png", fa1)
 ggsave("plots/factor2_loading_plot.png", fa2)
 ggsave("plots/factor3_loading_plot.png", fa3)
 ggsave("plots/factor4_loading_plot.png", fa4)
-
+ggsave("plots/factor5_loading_plot.png", fa5)
+ggsave("plots/factor6_loading_plot.png", fa6)
+combined_plot <- (fa1 | fa2 | fa3) / (fa4 | fa5 | fa6)
+ggsave("plots/all_factor_loading_plots.png", 
+       combined_plot, 
+       width = 11, height = 8.5, units = "in", dpi = 300)
 ```
 
 
@@ -202,7 +212,51 @@ gofglca(glc_m1,glc_m2,glc_m3, glc_m4, glc_m5, glc_m6, glc_m7, test='boot')
 #######Based on the goodness of fit table, i would choose model 5 (nclass = 7)as our final mode########
 
 plot(glc_m5)
-summary(glc_m5)
+fit <- summary(glc_m5)
+
+lca_prob_1 <- read_csv("data/lca_prob_1.csv")
+lca_prob_2 <- read_csv("data/lca_prob_2.csv")
+lca_prob_3 <- read_csv("data/lca_prob_3.csv")
+
+lca_prob_all <- bind_rows(lca_prob_1,lca_prob_2,lca_prob_3)
+lca_prob_all_clean <- lca_prob_all |>
+  mutate(
+    Item = str_extract(Item, "\\d+"),            
+    Class = str_extract(Class, "\\d+"),           
+    Category = str_extract(Category, "\\d+")     
+  ) |> 
+  mutate(
+    Item = as.integer(Item),
+    Class = as.integer(Class),
+    Category = as.integer(Category)
+  )
+
+lca_prob_all_clean <- lca_prob_all_clean |>
+  arrange(Item) |>
+  mutate(Item_group = ceiling(Item / 4))
+
+####Now, create one plot per group#####
+plots <- lca_prob_all_clean |>
+  group_split(Item_group) |>
+  map(~{
+    ggplot(.x, aes(x = factor(Class), 
+                   y = Probability, 
+                   fill = factor(Category))) +
+      geom_bar(stat = "identity", position = "dodge") +
+      facet_wrap(~ paste0("Item ", Item), scales = "free_y") +
+      scale_fill_brewer(palette = "Set2", name = "Response Category") +
+      labs(
+        x = "Class", y = "Probability",
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(size = 8),
+        strip.text = element_text(size = 10, face = "bold")
+      )
+  })
+
+walk2(plots, 1:7, ~ ggsave(paste0("plot_group_", .y, ".png"), .x, width = 10, height = 6))
+
 ```
 
 Descriptions of all seven classes
@@ -247,24 +301,30 @@ demo_by_class |>
   ggplot(aes(x = cov_age, fill = class)) +
   geom_density(alpha = 0.8) +  
   scale_fill_manual(values = class_colors) +
-  labs(title = "Age Density by Latent Class", x = "Age", y = "Density") +
+  labs( x = "Age", y = "Density") +
   theme_minimal()
 
 
-ggplot(demo_by_class, aes(x = cov_gender, fill = class)) +
+class_gender_plot <- ggplot(demo_by_class, aes(x = cov_gender, fill = class)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = class_colors) +
   labs(x = NULL, y = NULL)  +
   theme_minimal()+
-  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=6) )
+  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=8) )
 
 
-ggplot(demo_by_class, aes(x = cov_race, fill = class)) +
+class_race_plot <- ggplot(demo_by_class, aes(x = cov_race, fill = class)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = class_colors) +
   labs(x = NULL, y = NULL) +
   theme_minimal()+
-  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=5) )
+  theme(axis.text.x = element_text(angle = 30,hjust = 1, size=8) )
+
+
+race_gender_plot <- (class_gender_plot ) / (class_race_plot)
+ggsave("plots/race_gender_plot.png", 
+       race_gender_plot, 
+       width = 11, height = 8.5, units = "in", dpi = 300)
 
 ```
 
